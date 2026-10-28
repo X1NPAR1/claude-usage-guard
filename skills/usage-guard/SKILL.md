@@ -1,6 +1,6 @@
 ---
 name: usage-guard
-description: Keep a long Claude Code task inside the session usage limit. Reads the "Current session" percentage and reset time from claude.ai/settings/usage in Chrome before every work step (about once a minute), logs it, stops safely at 98%, sleeps in-session until one minute after the reset, then resumes with "Kaldığın yerden profesyonel bir şekilde devam et". Use when the user asks to watch, track or guard the Claude session limit, or to keep working unattended across a limit reset.
+description: Keep a long Claude Code task inside the session usage limit. Reads the "Current session" percentage and reset time from claude.ai/settings/usage in Chrome at least every 5 minutes and around long steps, logs it, stops safely at 98%, sleeps in-session until one minute after the reset, then resumes with "Kaldığın yerden profesyonel bir şekilde devam et". Use when the user asks to watch, track or guard the Claude session limit, or to keep working unattended across a limit reset.
 ---
 
 # Usage guard
@@ -17,22 +17,29 @@ It needs Claude in Chrome (`mcp__claude-in-chrome__*`) and a signed-in claude.ai
 3. Read once (step 2) and tell the user the current percentage and reset time.
 4. Write these rules into the project's memory/progress file so a resumed turn knows them.
 
-## 2. Check (every work step, at least once a minute while working)
+## 2. Check (EVERY 5 MINUTES — never skip)
 
-Run `scripts/read-usage.js` with `javascript_tool` (it reloads the page and returns
-JSON `{percent, resets, relative}`). Then log it:
+**Hard rule:** while working, check usage **at least every 5 minutes of wall-clock time**, and also
+before and after every long tool call (builds, tests, uploads, CI waits). Do not rely on memory:
+`record.ps1` prints how many minutes passed since the previous reading; if it says `OVERDUE`, check
+immediately and from then on check before every tool call until back on schedule.
+
+Run `scripts/read-usage.js` with `javascript_tool` (it returns JSON `{percent, resets, relative}`).
+Navigate to `https://claude.ai/new#settings/usage` first if the dialog is not open. Then log it:
 
 ```
 powershell -NoProfile -File <skill>/scripts/record.ps1 -Percent <percent> -ResetTime "<resets>" [-Relative]
 ```
 
 Pass `-Relative` when `relative` is true ("Resets in 2 hr 10 min").
-`record.ps1` appends to `usage-log.txt` and prints `OK <n>%` or
+`record.ps1` appends to `usage-log.txt` and prints `OK <n>% (<m> min since last check)` or
 `STOP <resume-at ISO time> <seconds-to-wait>`. The log goes to `USAGE_GUARD_DIR`
 (default: the skill folder), so set it to keep writes off a full system drive.
 
-Check before and after long tool calls (builds, CI waits). Never chain many
-expensive steps without a check in between.
+If Chrome does not respond: retry once with `tabs_context_mcp` + `navigate`; if it still fails,
+tell the user in one line, keep steps small, and retry at the next step — never silently skip checks
+for more than 5 minutes. Below 90% you may take normal steps; from 90% on, take only small steps
+and check after each one.
 
 ## 3. Stop at 98% (no user confirmation)
 
