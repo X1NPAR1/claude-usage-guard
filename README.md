@@ -2,7 +2,7 @@
 
 A Claude Code skill that keeps long, unattended tasks inside the **session usage
 limit**. Before each work step it reads *Current session* from
-`claude.ai/settings/usage` in Chrome, logs it, checks at least **every 5 minutes** (and around long steps), stops safely at **98%**, waits inside
+`claude.ai/settings/usage` in Chrome, logs it, checks **every minute** (strict rule) (and around long steps), stops safely at **98%**, waits inside
 the same session until one minute after the reset, and resumes with
 *"Kaldığın yerden profesyonel bir şekilde devam et"*.
 
@@ -41,7 +41,7 @@ Set `USAGE_GUARD_DIR` to choose where `usage-log.txt` is written.
 - It depends on the claude.ai usage page layout. If that changes, `read-usage.js`
   returns `null` and Claude reports it instead of guessing.
 - Checks happen between work steps, so one very long step can overshoot slightly. `record.ps1` reports
-  minutes since the previous check and flags `OVERDUE` when the 5-minute rule was missed.
+  minutes since the previous check and flags `OVERDUE` when the 1-minute rule was missed.
 - It never launches external `claude` processes or bypasses permission prompts.
 
 ## License

@@ -1,11 +1,11 @@
 # Logs one usage reading and decides whether to stop.
-# Usage: record.ps1 -Percent 74 -ResetTime "5:40 AM" [-Relative] [-Threshold 98] [-IntervalMinutes 5]
+# Usage: record.ps1 -Percent 74 -ResetTime "5:40 AM" [-Relative] [-Threshold 98] [-IntervalMinutes 1]
 param(
   [Parameter(Mandatory)][int]$Percent,
   [Parameter(Mandatory)][string]$ResetTime,
   [switch]$Relative,
   [int]$Threshold = 98,
-  [int]$IntervalMinutes = 5
+  [int]$IntervalMinutes = 1
 )
 $dir = if ($env:USAGE_GUARD_DIR) { $env:USAGE_GUARD_DIR } else { Split-Path $PSScriptRoot -Parent }
 New-Item -ItemType Directory -Force $dir | Out-Null
