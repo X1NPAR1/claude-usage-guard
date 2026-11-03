@@ -26,14 +26,17 @@ check is a failure of this skill; there is no "too busy" exception. Do not rely 
 `record.ps1` prints how many minutes passed since the previous reading; if it says `OVERDUE`, check
 immediately and from then on check before every tool call until back on schedule.
 
-Run `scripts/read-usage.js` with `javascript_tool` (it returns JSON `{percent, resets, relative}`).
-Navigate to `https://claude.ai/new#settings/usage` first if the dialog is not open. Then log it:
+Navigate to `https://claude.ai/new#settings/usage` (or reload it), then run
+`scripts/read-usage.js` with `javascript_tool`. It reads the English or Turkish page and
+returns JSON `{percent, resets, relative, language}`. Then log it:
 
 ```
 powershell -NoProfile -File <skill>/scripts/record.ps1 -Percent <percent> -ResetTime "<resets>" [-Relative]
 ```
 
-Pass `-Relative` when `relative` is true ("Resets in 2 hr 10 min").
+Pass `resets` unchanged as `-ResetTime` and add `-Relative` when `relative` is true.
+`record.ps1` understands both languages: "5:40 AM", "Fri 3:10 AM", "17:10",
+"Cuma 03:10", and relative "2 hr 10 min" / "2 sa 10 dk".
 `record.ps1` appends to `usage-log.txt` and prints `OK <n>% (<m> min since last check)` or
 `STOP <resume-at ISO time> <seconds-to-wait>`. The log goes to `USAGE_GUARD_DIR`
 (default: the skill folder), so set it to keep writes off a full system drive.
@@ -70,7 +73,9 @@ the memory file next to the 98% rule and apply them at every check.
 
 ## Notes
 
-- `read-usage.js` matches the English usage page ("Current session", "Resets at/in",
-  "% used"). If it returns `null`, take a screenshot and report it rather than guessing.
+- `read-usage.js` matches the English ("Current session", "Resets at", "62% used") and
+  Turkish ("Mevcut oturum", "Sıfırlanma zamanı:", "%10 kullanılmış") usage pages. If it
+  returns `null` (another language or a new layout), take a screenshot and report it
+  rather than guessing.
 - Checks happen between steps, so a single very long step can overshoot slightly; keep
   steps short near the limit.

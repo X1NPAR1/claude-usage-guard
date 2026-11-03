@@ -31,10 +31,16 @@ Ask Claude *"usage-guard ile limit takibini başlat"* or run `/usage-guard`.
 | File | Purpose |
 |---|---|
 | `SKILL.md` | The protocol: start, per-step check, 98% stop, in-session wait, resume |
-| `scripts/read-usage.js` | Reads the percentage and reset time from the usage page |
+| `scripts/read-usage.js` | Reads the percentage and reset time from the English or Turkish usage page |
 | `scripts/record.ps1` | Logs a reading, prints `OK` or `STOP <resume-at> <seconds>` |
 
 Set `USAGE_GUARD_DIR` to choose where `usage-log.txt` is written.
+
+## Languages
+
+The usage page is read in **English** and **Turkish**. Reset times such as `5:40 AM`,
+`Fri 3:10 AM`, `17:10`, `Cuma 03:10`, `2 hr 10 min` and `2 sa 10 dk` are understood.
+Other interface languages return `null` and are reported instead of guessed.
 
 ## Limits
 
