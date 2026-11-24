@@ -1,15 +1,14 @@
 # claude-usage-guard
 
 A Claude Code skill that keeps long, unattended tasks inside the **session usage
-limit**. Before each work step it reads *Current session* from
-`claude.ai/settings/usage` in Chrome, logs it, checks **every minute** (strict rule) (and around long steps), stops safely at **98%**, waits inside
-the same session until one minute after the reset, and resumes with
-*"Kaldığın yerden profesyonel bir şekilde devam et"*.
+limit**. It reads *Current session* **from the terminal** by running `claude -p "/usage"`
+in the background (no browser or Chrome extension needed), logs it, checks at every phase
+start and around long steps, stops safely at **98%**, waits inside the same session until one
+minute after the reset, and resumes with *"Kaldığın yerden profesyonel bir şekilde devam et"*.
 
 ## Why a skill, not an agent
 
-The checks need Claude in Chrome and the ability to pause and be woken up again. Both
-live in the main session. A subagent cannot keep a browser watch running or resume its
+The guard must pause the main session and be woken up again. A subagent cannot resume its
 parent, so the guard is a protocol the main session follows.
 
 ## Install
@@ -21,34 +20,32 @@ git clone https://github.com/X1NPAR1/claude-usage-guard
 cp -r claude-usage-guard/skills/usage-guard <project>/.claude/skills/
 ```
 
-Requirements: Claude Code with the Claude in Chrome extension, signed in to claude.ai,
-and PowerShell (Windows PowerShell 5.1 or pwsh) for `record.ps1`.
+Requirements: the `claude` CLI on `PATH` (signed in with the subscription) and PowerShell
+(Windows PowerShell 5.1 or pwsh).
 
 ## Use
 
-Ask Claude *"usage-guard ile limit takibini başlat"* or run `/usage-guard`.
+Ask Claude *"usage-guard ile limit takibini başlat"* or run `/usage-guard`. Manual check:
+
+```
+powershell -NoProfile -File .claude/skills/usage-guard/scripts/cli-usage.ps1
+OK 32% resets Nov 24, 10:40pm
+```
 
 | File | Purpose |
 |---|---|
-| `SKILL.md` | The protocol: start, per-step check, 98% stop, in-session wait, resume |
-| `scripts/read-usage.js` | Reads the percentage and reset time from the English or Turkish usage page |
-| `scripts/record.ps1` | Logs a reading, prints `OK` or `STOP <resume-at> <seconds>` |
+| `SKILL.md` | The protocol: start, checks, 98% stop, in-session wait, resume |
+| `scripts/cli-usage.ps1` | Runs `claude -p "/usage"`, logs the reading, prints `OK`, `STOP <resume-at> <seconds>` or `UNKNOWN` |
+| `scripts/read-usage.js`, `scripts/record.ps1` | Optional browser fallback (Claude in Chrome, English/Turkish usage page) |
 
-Set `USAGE_GUARD_DIR` to choose where `usage-log.txt` is written.
-
-## Languages
-
-The usage page is read in **English** and **Turkish**. Reset times such as `5:40 AM`,
-`Fri 3:10 AM`, `17:10`, `Cuma 03:10`, `2 hr 10 min` and `2 sa 10 dk` are understood.
-Other interface languages return `null` and are reported instead of guessed.
+Set `USAGE_GUARD_DIR` to choose where `usage-log.txt` is written; `-LimitPercent` changes the 98% stop.
 
 ## Limits
 
-- It depends on the claude.ai usage page layout. If that changes, `read-usage.js`
-  returns `null` and Claude reports it instead of guessing.
-- Checks happen between work steps, so one very long step can overshoot slightly. `record.ps1` reports
-  minutes since the previous check and flags `OVERDUE` when the 1-minute rule was missed.
-- It never launches external `claude` processes or bypasses permission prompts.
+- It depends on the `/usage` output format. If that changes, the script prints `UNKNOWN`
+  and Claude reports it instead of guessing.
+- Checks happen between work steps, so one very long step can overshoot slightly.
+- It never bypasses permission prompts.
 
 ## License
 
